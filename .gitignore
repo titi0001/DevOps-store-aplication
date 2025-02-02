@@ -1,0 +1,43 @@
+# Binários de compilação
+backend/dist/
+populate/dist/
+
+# Arquivos temporários do sistema
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Configurações de IDEs (VS Code, JetBrains, etc.)
+.vscode/
+.idea/
+
+# Arquivos do Docker
+**/.dockerignore
+docker-compose.override.yml
+
+# Arquivos de credenciais sensíveis
+*.pem
+*.key
+*.crt
+.aws/credentials
+
+# Arquivos do Terraform
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+*.tfvars
+override.tf
+override.tf.json
+crash.log
+
+# Pipelines e workflows temporários
+.github/workflows/*.log
+
+# Configurações de ambiente
+.env
+.env.*
+
+# Cache do Git
+.git/modules/
+.git/COMMIT_EDITMSG
