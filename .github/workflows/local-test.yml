@@ -1,0 +1,96 @@
+name: Local Test Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  local-test:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+
+    env:
+      PORT: 3000
+      DB_USER: ${{ secrets.DB_USER }} 
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Limpeza de containers antes do deploy
+        run: |
+          docker stop backend-container populate-container || true
+          docker rm -f backend-container populate-container || true
+          docker network rm devops-network || true
+
+      - name: Criar rede Docker
+        run: |
+          docker network create devops-network || true
+
+      - name: Iniciar o PostgreSQL
+        run: |
+          if [ ! $(docker ps -q -f name=postgres-db) ]; then
+            docker run -d \
+              --name postgres-db \
+              --network devops-network \
+              --restart always \
+              -e POSTGRES_USER=$DB_USER \
+              -e POSTGRES_PASSWORD=$DB_PASSWORD \
+              -e POSTGRES_DB=$DB_NAME \
+              -p $DB_PORT:5432 \
+              postgres
+          fi
+
+      - name: Aguardar o PostgreSQL
+        run: |
+          until docker exec postgres-db pg_isready -U $DB_USER -d $DB_NAME; do
+            sleep 2
+          done
+          until docker exec postgres-db psql -U $DB_USER -d $DB_NAME -c '\q'; do
+            sleep 2
+          done
+
+      - name: Build da imagem Populate
+        run: |
+          docker build -t devops-store-populate:local ./populate
+
+      - name: Executar o Populate
+        run: |
+          docker run -d \
+            --name populate-container \
+            --network devops-network \
+            -e DB_HOST=$DB_HOST \
+            -e DB_PORT=$DB_PORT \
+            -e DB_USER=$DB_USER \
+            -e DB_PASSWORD=$DB_PASSWORD \
+            -e DB_NAME=$DB_NAME \
+            devops-store-populate:local
+
+      - name: Remover o Backend
+        run: |
+          docker rm -f backend-container || true
+
+      - name: Build da imagem Backend
+        run: |
+          docker build -t devops-store-backend:local ./backend
+
+      - name: Iniciar o Backend
+        run: |
+          docker run -d \
+            --name backend-container \
+            --network devops-network \
+            -p $PORT:$PORT \
+            --env DB_HOST=$DB_HOST \
+            --env DB_PORT=$DB_PORT \
+            --env DB_USER=$DB_USER \
+            --env DB_PASSWORD=$DB_PASSWORD \
+            --env DB_NAME=$DB_NAME \
+            devops-store-backend:local
