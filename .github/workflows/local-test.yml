@@ -1,12 +1,12 @@
 name: Local Test Pipeline
 
-on:
-  push:
-    branches:
-      - develop
-  pull_request:
-    branches:
-      - develop
+# on:
+#   push:
+#     branches:
+#       - develop
+#   pull_request:
+#     branches:
+#       - develop
 
 jobs:
   local-test:
