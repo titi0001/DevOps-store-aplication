@@ -43,8 +43,6 @@ A infraestrutura na AWS é composta pelos seguintes recursos:
 
 ## Sobre o Teste Técnico
 
-Este projeto foi desenvolvido como parte do processo seletivo para a vaga de DevOps na EADSKILL. O objetivo é demonstrar conhecimentos em:
-
 - Banco de dados PostgreSQL
 - Containerização com Docker
 - Orquestração de containers com AWS ECS ou EKS
